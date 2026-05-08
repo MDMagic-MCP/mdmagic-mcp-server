@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "mdmagic": {
+      "command": "node",
+      "args": ["/opt/mdmagic-api/mdmagic-mcp-server/build/index.js"],
+      "env": {
+        "MDMAGIC_API_KEY": "mdmagic-1234567890123456",
+        "MDMAGIC_BASE_URL": "http://localhost:3000"
+      }
+    }
+  }
+}
