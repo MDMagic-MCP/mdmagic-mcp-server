@@ -5,7 +5,7 @@
 [![npm version](https://img.shields.io/npm/v/@mdmagic/mcp-server.svg)](https://www.npmjs.com/package/@mdmagic/mcp-server)
 [![license](https://img.shields.io/npm/l/@mdmagic/mcp-server.svg)](LICENSE)
 
-Your AI assistant writes great Markdown. Exporting it has always been the bottleneck. This MCP server gives Claude (and any other MCP-compatible client) direct access to MDMagic's professional document conversion pipeline — Pandoc + Microsoft Graph API + 18 designer-built templates — so the AI can produce boardroom-grade documents in a single tool call.
+Your AI assistant writes great Markdown. Exporting it has always been the bottleneck. This MCP server gives Claude (and any other MCP-compatible client) direct access to MDMagic's professional document conversion pipeline — Pandoc + Microsoft Graph API + 15 designer-built templates — so the AI can produce boardroom-grade documents in a single tool call.
 
 ```
 You: "Take this report and turn it into a Corporate_Navy PDF."
@@ -115,7 +115,7 @@ The AI picks the right tool and returns a secure, time-limited download link.
 | `convert_document` | Convert Markdown → DOCX / PDF / HTML / all three. Returns a secure expiring URL. |
 | `estimate_conversion_cost` | Pre-flight cost estimate based on word count, page count, format, and template type. |
 | `check_credit_balance` | Current credit balance (subscription + purchased pools), plan status. |
-| `list_all_templates` | Full template catalog: 18 built-in families + your custom uploads. |
+| `list_all_templates` | Full template catalog: 15 built-in families + your custom uploads. |
 | `list_builtin_templates` | Only the built-in templates (Academic, Corporate, Modern, etc.). |
 | `list_custom_templates` | Only your custom uploaded templates. |
 | `show_default_settings` | Your default page size, orientation, and template preferences. |
