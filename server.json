@@ -1,41 +1,45 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.MDMagic-MCP/mdmagic-mcp-server",
-  "title": "MDMagic — Markdown to professional documents",
   "description": "Use your own Word templates to convert Markdown → DOCX/PDF/HTML from any MCP-compatible AI.",
-  "version": "1.7.5",
+  "version": "1.7.6",
   "repository": {
     "url": "https://github.com/MDMagic-MCP/mdmagic-mcp-server",
     "source": "github"
   },
   "websiteUrl": "https://mdmagic.ai/mcp",
-  "homepage": "https://mdmagic.ai/mcp",
-  "documentationUrl": "https://github.com/MDMagic-MCP/mdmagic-mcp-server#readme",
-  "icon": "https://mdmagic.ai/mdmagic-logo.png",
-  "license": "MIT",
-  "categories": [
-    "productivity",
-    "document-processing",
-    "content-generation"
-  ],
-  "tags": [
-    "markdown",
-    "docx",
-    "pdf",
-    "html",
-    "document-conversion",
-    "pandoc",
-    "templates",
-    "office",
-    "word",
-    "claude",
-    "cursor"
-  ],
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "title": "MDMagic — Markdown to professional documents",
+      "icon": "https://mdmagic.ai/mdmagic-logo.png",
+      "homepage": "https://mdmagic.ai/mcp",
+      "documentationUrl": "https://github.com/MDMagic-MCP/mdmagic-mcp-server#readme",
+      "license": "MIT",
+      "categories": [
+        "productivity",
+        "document-processing",
+        "content-generation"
+      ],
+      "tags": [
+        "markdown",
+        "docx",
+        "pdf",
+        "html",
+        "document-conversion",
+        "pandoc",
+        "templates",
+        "office",
+        "word",
+        "claude",
+        "cursor"
+      ]
+    }
+  },
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@mdmagic/mcp-server",
-      "version": "1.7.5",
+      "version": "1.7.6",
       "transport": {
         "type": "stdio"
       },
