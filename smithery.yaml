@@ -1,0 +1,24 @@
+# Smithery configuration for @mdmagic/mcp-server
+# https://smithery.ai/docs/build
+
+startCommand:
+  type: stdio
+
+configSchema:
+  type: object
+  required:
+    - mdmagicApiKey
+  properties:
+    mdmagicApiKey:
+      type: string
+      description: >-
+        Your personal MDMagic API key (format: mdmagic-XXXXXXXXXXXXXXXX).
+        Generate one at https://mdmagic.ai/account — open the
+        "Connect to AI Assistants via MCP" card.
+
+commandFunction: |-
+  (config) => ({
+    command: 'node',
+    args: ['build/index.js'],
+    env: { MDMAGIC_API_KEY: config.mdmagicApiKey }
+  })
