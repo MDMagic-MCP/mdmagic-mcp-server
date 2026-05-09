@@ -1,6 +1,34 @@
 # Smithery configuration for @mdmagic/mcp-server
 # https://smithery.ai/docs/build
 
+# Server metadata — surfaced on the Smithery listing page
+displayName: "MDMagic — Markdown to professional documents"
+description: >-
+  Turn Markdown into boardroom-grade DOCX, PDF, and HTML directly from Claude,
+  Cursor, VS Code, or any MCP-compatible AI assistant. 15 designer-built
+  templates across Business, Creative, Professional, and Technical categories.
+  Pre-flight cost estimation, balance checks, and zero permanent storage.
+
+icon: https://mdmagic.ai/favicon.png
+homepage: https://mdmagic.ai/mcp
+repository: https://github.com/MDMagic-MCP/mdmagic-mcp-server
+license: MIT
+
+categories:
+  - productivity
+  - document-processing
+  - content-generation
+
+tags:
+  - markdown
+  - docx
+  - pdf
+  - html
+  - pandoc
+  - templates
+  - word
+  - office
+
 startCommand:
   type: stdio
 
@@ -11,14 +39,48 @@ configSchema:
   properties:
     mdmagicApiKey:
       type: string
+      title: MDMagic API key
       description: >-
         Your personal MDMagic API key (format: mdmagic-XXXXXXXXXXXXXXXX).
         Generate one at https://mdmagic.ai/account — open the
         "Connect to AI Assistants via MCP" card.
+      pattern: "^mdmagic-[0-9]{16}$"
+      examples:
+        - "mdmagic-1234567890123456"
+    baseUrl:
+      type: string
+      title: API base URL (advanced)
+      description: >-
+        Override the MDMagic API endpoint. Leave empty to use the default
+        production endpoint. Only change this if you're running MDMagic
+        against a local development backend.
+      default: "https://api.mdmagic.ai"
+      format: uri
+    requestTimeout:
+      type: integer
+      title: Request timeout (ms)
+      description: >-
+        Network request timeout in milliseconds. Increase for very large
+        documents on slow connections.
+      default: 30000
+      minimum: 5000
+      maximum: 300000
+    debug:
+      type: boolean
+      title: Verbose logging
+      description: >-
+        Enable verbose stderr logging for debugging. Off by default to keep
+        the host AI client's logs clean.
+      default: false
 
 commandFunction: |-
   (config) => ({
     command: 'node',
     args: ['build/index.js'],
-    env: { MDMAGIC_API_KEY: config.mdmagicApiKey }
+    env: {
+      MDMAGIC_API_KEY: config.mdmagicApiKey,
+      MDMAGIC_BASE_URL: config.baseUrl || 'https://api.mdmagic.ai',
+      REQUEST_TIMEOUT: String(config.requestTimeout || 30000),
+      DEBUG: config.debug ? 'mdmagic:*' : ''
+    }
   })

@@ -1,37 +1,95 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.MDMagic-MCP/mdmagic-mcp-server",
-  "description": "Convert Markdown to professional DOCX, PDF, and HTML using MDMagic's templates.",
-  "version": "1.7.0",
+  "title": "MDMagic — Markdown to professional documents",
+  "description": "Turn Markdown into boardroom-grade DOCX, PDF, and HTML directly from Claude, Cursor, VS Code, or any MCP-compatible AI assistant. Powered by MDMagic's Pandoc + Microsoft Graph + Mammoth.js pipeline with 15 designer-built templates (Business, Creative, Professional, Technical) and zero permanent storage.",
+  "version": "1.7.1",
   "repository": {
     "url": "https://github.com/MDMagic-MCP/mdmagic-mcp-server",
     "source": "github"
   },
-  "websiteUrl": "https://mdmagic.ai",
+  "websiteUrl": "https://mdmagic.ai/mcp",
+  "homepage": "https://mdmagic.ai/mcp",
+  "documentationUrl": "https://github.com/MDMagic-MCP/mdmagic-mcp-server#readme",
+  "icon": "https://mdmagic.ai/favicon.png",
+  "license": "MIT",
+  "categories": [
+    "productivity",
+    "document-processing",
+    "content-generation"
+  ],
+  "tags": [
+    "markdown",
+    "docx",
+    "pdf",
+    "html",
+    "document-conversion",
+    "pandoc",
+    "templates",
+    "office",
+    "word",
+    "claude",
+    "cursor"
+  ],
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@mdmagic/mcp-server",
-      "version": "1.7.0",
+      "version": "1.7.1",
       "transport": {
         "type": "stdio"
       },
       "environmentVariables": [
         {
           "name": "MDMAGIC_API_KEY",
-          "description": "Your personal MDMagic API key (format: mdmagic-XXXXXXXXXXXXXXXX). Get yours at https://mdmagic.ai/account",
+          "description": "Your personal MDMagic API key (format: mdmagic-XXXXXXXXXXXXXXXX). Get yours at https://mdmagic.ai/account — the 'Connect to AI Assistants via MCP' card on your account page generates the key and pre-fills a copy-pasteable config block.",
           "isRequired": true,
           "isSecret": true
         },
         {
           "name": "MDMAGIC_BASE_URL",
-          "description": "Override the MDMagic API base URL (default: https://api.mdmagic.ai). Only set if running against a local dev backend.",
-          "isRequired": false
+          "description": "Override the MDMagic API base URL. Defaults to https://api.mdmagic.ai. Only set this if you're running MDMagic against a local dev backend.",
+          "isRequired": false,
+          "default": "https://api.mdmagic.ai"
         },
         {
           "name": "REQUEST_TIMEOUT",
-          "description": "Request timeout in milliseconds (default: 30000)",
-          "isRequired": false
+          "description": "Request timeout in milliseconds. Increase for very large documents on slow connections. Default: 30000 (30s).",
+          "isRequired": false,
+          "default": "30000"
+        },
+        {
+          "name": "MCP_TRANSPORT",
+          "description": "Transport mode: 'stdio' (default, for local clients like Claude Desktop) or 'http' (for self-hosted Streamable HTTP).",
+          "isRequired": false,
+          "default": "stdio"
+        },
+        {
+          "name": "MCP_HTTP_PORT",
+          "description": "Port for HTTP transport mode. Default: 3001. Only used when MCP_TRANSPORT=http.",
+          "isRequired": false,
+          "default": "3001"
+        },
+        {
+          "name": "MCP_HTTP_HOST",
+          "description": "Bind address for HTTP transport mode. Default: 127.0.0.1. Only used when MCP_TRANSPORT=http.",
+          "isRequired": false,
+          "default": "127.0.0.1"
+        }
+      ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://api.mdmagic.ai/mcp",
+      "description": "Hosted Streamable HTTP endpoint — useful for clients that don't run local processes. Pass your MDMagic API key as the x-api-key header.",
+      "headers": [
+        {
+          "name": "x-api-key",
+          "description": "Your personal MDMagic API key from https://mdmagic.ai/account",
+          "isRequired": true,
+          "isSecret": true
         }
       ]
     }

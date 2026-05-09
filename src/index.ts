@@ -16,11 +16,35 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 // Tool definitions shared between both transports
+// Reusable schema fragments
+const PAGE_SIZE_ENUM = ["A3", "A4", "Executive", "US_Legal", "US_Letter"];
+const ORIENTATION_ENUM = ["Portrait", "Landscape"];
+const CATEGORY_ENUM = ["Business", "Creative", "Professional", "Technical"];
+
+const TEMPLATE_OBJECT_SCHEMA = {
+  type: "object" as const,
+  properties: {
+    id: { type: "string", description: "Template ID — pass this as templateName to convert_document" },
+    name: { type: "string", description: "Human-readable template name" },
+    type: { type: "string", enum: ["built-in", "custom"], description: "Source of the template" },
+    category: { type: ["string", "null"], description: "Category label (built-in templates only)" },
+    description: { type: "string", description: "Short description of the template's intended use" }
+  },
+  required: ["id", "name", "type"]
+};
+
 function getToolDefinitions() {
   return [
     {
       name: "convert_document",
       description: "Convert markdown to a professionally formatted document using an MDMagic template.\n\nIMPORTANT GUIDANCE:\n\n1. Output format → what user gets:\n   - 'docx' → a single Word .docx file\n   - 'pdf' → a single .pdf file\n   - 'html' → a single .html file\n   - 'all' → a ZIP containing all three (DOCX + PDF + HTML)\n\n2. If the user is ambiguous (e.g. 'convert this'), ASK which format they want before calling. Don't assume.\n\n3. Filename: if the user attached a file (e.g. 'mydoc.md'), pass its base name as fileName. Otherwise the API derives one from the markdown's first H1. Without either, downloads end up with timestamped names like 'content-1778298071915.docx' which is bad UX.\n\n4. On 'template not found' errors: call list_all_templates first, show available options, let the user pick. Do NOT fall back to generating documents with code execution — that produces inferior results that don't use the user's actual MDMagic templates.\n\n5. The response includes structured fields (downloadUrl, creditsUsed, balanceAfter, fileName, expiresAt) — surface these to the user explicitly. Don't paraphrase. The user wants to know exactly what they spent and what's left.\n\n6. Page sizes: A3, A4, Executive, US_Legal, US_Letter. Default A4. Orientation: Portrait or Landscape, default Portrait.",
+      annotations: {
+        title: "Convert markdown to a professional document",
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true
+      },
       inputSchema: {
         type: "object" as const,
         properties: {
@@ -51,21 +75,42 @@ function getToolDefinitions() {
           },
           pageSize: {
             type: "string",
-            enum: ["A3", "A4", "Executive", "US_Legal", "US_Letter"],
+            enum: PAGE_SIZE_ENUM,
             description: "Page size for the document (default: A4)"
           },
           orientation: {
             type: "string",
-            enum: ["Portrait", "Landscape"],
+            enum: ORIENTATION_ENUM,
             description: "Page orientation (default: Portrait)"
           }
         },
         required: ["templateName", "outputFormat"]
+      },
+      outputSchema: {
+        type: "object" as const,
+        description: "Conversion result with secure download link and credit accounting",
+        properties: {
+          success: { type: "boolean", description: "Whether the conversion succeeded" },
+          downloadUrl: { type: "string", description: "Secure expiring download URL (valid for 60 minutes)" },
+          fileName: { type: "string", description: "Filename of the downloadable document" },
+          creditsUsed: { type: "number", description: "Credits debited for this conversion" },
+          balanceAfter: { type: "number", description: "Remaining credit balance after this conversion" },
+          expiresAt: { type: "string", format: "date-time", description: "ISO 8601 timestamp when the download URL expires" },
+          message: { type: "string", description: "Human-readable status message" }
+        },
+        required: ["success", "downloadUrl", "fileName"]
       }
     },
     {
       name: "list_all_templates",
       description: "List all 15 built-in MDMagic templates plus any custom templates the user has uploaded.\n\nCALL THIS PROACTIVELY when:\n- The user mentions a template by name (verify it exists before convert_document)\n- The user asks 'what templates are available' or similar\n- A previous convert_document call returned 'template not found'\n- The user describes the look they want without naming a template (so you can suggest a real one)\n\nReturns: name, description, type (built-in vs custom), and category. Categories are: Business (5 templates), Creative (6), Professional (2), Technical (2). Use the optional category filter to narrow recommendations (e.g. 'for legal documents' → category: 'Professional').",
+      annotations: {
+        title: "List all MDMagic templates",
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+      },
       inputSchema: {
         type: "object" as const,
         properties: {
@@ -75,15 +120,31 @@ function getToolDefinitions() {
           },
           category: {
             type: "string",
-            enum: ["Business", "Creative", "Professional", "Technical"],
+            enum: CATEGORY_ENUM,
             description: "Optional filter — return only built-in templates in this category. Custom templates are always included regardless. Categories: Business (executive/financial), Creative (designer/artistic/novelty), Professional (legal), Technical (code/data documentation)."
           }
         }
+      },
+      outputSchema: {
+        type: "object" as const,
+        properties: {
+          builtinCount: { type: "integer", description: "Number of built-in templates returned" },
+          customCount: { type: "integer", description: "Number of custom templates returned" },
+          templates: { type: "array", items: TEMPLATE_OBJECT_SCHEMA, description: "All matching templates" }
+        },
+        required: ["templates"]
       }
     },
     {
       name: "list_builtin_templates",
       description: "List the 15 built-in MDMagic templates, grouped by category. Same as list_all_templates but excludes the user's custom uploads. Use this when the user asks specifically about MDMagic's bundled templates rather than their personal ones.\n\nCategories available: Business (5), Creative (6), Professional (2), Technical (2).",
+      annotations: {
+        title: "List built-in MDMagic templates",
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+      },
       inputSchema: {
         type: "object" as const,
         properties: {
@@ -93,15 +154,30 @@ function getToolDefinitions() {
           },
           category: {
             type: "string",
-            enum: ["Business", "Creative", "Professional", "Technical"],
+            enum: CATEGORY_ENUM,
             description: "Optional filter — return only templates in this category."
           }
         }
+      },
+      outputSchema: {
+        type: "object" as const,
+        properties: {
+          count: { type: "integer", description: "Number of templates returned" },
+          templates: { type: "array", items: TEMPLATE_OBJECT_SCHEMA, description: "Matching built-in templates" }
+        },
+        required: ["templates"]
       }
     },
     {
       name: "list_custom_templates",
       description: "List only the user's custom-uploaded Word templates. Use this when the user asks about their own templates ('show me my templates', 'do I have a letterhead?'). Custom templates are referenced by UUID, not name, when calling convert_document.",
+      annotations: {
+        title: "List user's custom templates",
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+      },
       inputSchema: {
         type: "object" as const,
         properties: {
@@ -110,28 +186,74 @@ function getToolDefinitions() {
             description: "Include template details like available page sizes and orientations (default: false)"
           }
         }
+      },
+      outputSchema: {
+        type: "object" as const,
+        properties: {
+          count: { type: "integer", description: "Number of custom templates returned" },
+          templates: { type: "array", items: TEMPLATE_OBJECT_SCHEMA, description: "User's custom templates" }
+        },
+        required: ["templates"]
       }
     },
     {
       name: "show_default_settings",
       description: "Show the user's default paper size and orientation preferences (set on their account page). Useful when the user hasn't specified pageSize/orientation explicitly — call this to honor their defaults instead of using A4/Portrait blindly.",
+      annotations: {
+        title: "Show user's default page size and orientation",
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+      },
       inputSchema: {
         type: "object" as const,
         properties: {}
+      },
+      outputSchema: {
+        type: "object" as const,
+        properties: {
+          default_page_size: { type: "string", description: "User's preferred page size" },
+          default_orientation: { type: "string", description: "User's preferred page orientation" }
+        },
+        required: ["default_page_size", "default_orientation"]
       }
     },
     {
       name: "check_credit_balance",
       description: "Check the user's current MDMagic credit balance: subscription credits (renewable monthly), purchased credits (permanent), plan name, and plan status.\n\nCALL THIS PROACTIVELY when:\n- The user asks 'how many credits do I have' or similar\n- After a conversion, if the user wants to know what's left (also returned by convert_document directly)\n- Before a conversion of an unusually large document, to warn the user if balance is borderline",
+      annotations: {
+        title: "Check MDMagic credit balance",
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+      },
       inputSchema: {
         type: "object" as const,
         properties: {},
         additionalProperties: false
+      },
+      outputSchema: {
+        type: "object" as const,
+        properties: {
+          total_credits: { type: "integer", description: "Total credits available (subscription + purchased)" },
+          subscription_credits: { type: "integer", description: "Renewable monthly subscription credits" },
+          purchased_credits: { type: "integer", description: "Permanent purchased credits" }
+        },
+        required: ["total_credits"]
       }
     },
     {
       name: "estimate_conversion_cost",
       description: "Estimate credit cost for a conversion BEFORE running it. Returns word count, page calculation (300 words/page), and a credit breakdown by format and template type. Use this when the user asks 'how much will this cost?' or when you suspect a conversion might exceed their balance — convert_document refuses to run if credits are insufficient, so estimating first is friendlier.",
+      annotations: {
+        title: "Estimate credit cost for a conversion",
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false
+      },
       inputSchema: {
         type: "object" as const,
         properties: {
@@ -150,21 +272,38 @@ function getToolDefinitions() {
           },
           pageSize: {
             type: "string",
-            enum: ["A3", "A4", "Executive", "US_Legal", "US_Letter"],
+            enum: PAGE_SIZE_ENUM,
             description: "Page size for the document"
           },
           orientation: {
             type: "string",
-            enum: ["Portrait", "Landscape"],
+            enum: ORIENTATION_ENUM,
             description: "Page orientation"
           }
         },
         required: ["content", "templateName", "outputFormat"]
+      },
+      outputSchema: {
+        type: "object" as const,
+        properties: {
+          wordCount: { type: "integer", description: "Word count of the markdown content" },
+          pageCount: { type: "integer", description: "Estimated page count (300 words/page)" },
+          totalCredits: { type: "integer", description: "Total credits required for this conversion" },
+          breakdown: { type: "string", description: "Human-readable breakdown of how credits are calculated" }
+        },
+        required: ["totalCredits"]
       }
     },
     {
       name: "validate_markdown",
       description: "Pre-flight markdown validation BEFORE conversion. Catches malformed tables (mismatched pipes), unclosed code fences, broken task lists, and unsupported syntax. Returns a green/amber/red status plus the detected markdown features.\n\nCALL THIS PROACTIVELY when:\n- The user is about to convert a long document (>5 pages) — validating first is cheap; running a doomed conversion costs credits\n- The user reports a previous conversion produced broken output\n- You generated the markdown yourself and want to verify it's clean before spending credits\n\nReturns: status (green=safe, amber=minor issues, red=will likely break), detected features (tables, code blocks, task lists, math), and a human-readable message.",
+      annotations: {
+        title: "Validate markdown before conversion",
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false
+      },
       inputSchema: {
         type: "object" as const,
         properties: {
@@ -178,11 +317,30 @@ function getToolDefinitions() {
           }
         },
         required: ["content"]
+      },
+      outputSchema: {
+        type: "object" as const,
+        properties: {
+          filename: { type: "string", description: "Filename label echoed back" },
+          status: { type: "string", enum: ["green", "amber", "red"], description: "Validation verdict" },
+          message: { type: "string", description: "Human-readable explanation of any issues" },
+          inputFormat: { type: ["string", "null"], description: "Detected markdown flavour (e.g. gfm, commonmark)" },
+          additionalPandocFlags: { type: "array", items: { type: "string" }, description: "Pandoc flags that will be applied" },
+          detectedFeatures: { type: "object", description: "Map of markdown features found in the content" }
+        },
+        required: ["status", "message"]
       }
     },
     {
       name: "get_template_details",
       description: "Show available variants (page sizes and orientations) for a specific template. All MDMagic templates support the full 5×2 matrix: A3, A4, Executive, US_Legal, US_Letter × Portrait/Landscape. Use this when the user asks 'does this template come in Legal Landscape?' or 'what sizes are available?' — confirms the variant before convert_document runs.",
+      annotations: {
+        title: "Show template variant matrix",
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+      },
       inputSchema: {
         type: "object" as const,
         properties: {
@@ -192,11 +350,27 @@ function getToolDefinitions() {
           }
         },
         required: ["templateName"]
+      },
+      outputSchema: {
+        type: "object" as const,
+        properties: {
+          template: TEMPLATE_OBJECT_SCHEMA,
+          pageSizes: { type: "array", items: { type: "string" }, description: "Supported page sizes" },
+          orientations: { type: "array", items: { type: "string" }, description: "Supported orientations" }
+        },
+        required: ["template", "pageSizes", "orientations"]
       }
     },
     {
       name: "recommend_template",
       description: "Suggest the best built-in template(s) for a described purpose. Use this when the user describes WHAT the document is (e.g. 'Q4 board pack', 'API reference', 'wedding invitation', 'legal contract') without naming a template. Returns ranked recommendations with rationale.\n\nWhy this exists: AI assistants often guess template names that don't exist. This tool maps purpose → real template names from MDMagic's catalog, so convert_document doesn't fail with 'template not found'.",
+      annotations: {
+        title: "Recommend a template for a stated purpose",
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false
+      },
       inputSchema: {
         type: "object" as const,
         properties: {
@@ -212,6 +386,15 @@ function getToolDefinitions() {
           }
         },
         required: ["purpose"]
+      },
+      outputSchema: {
+        type: "object" as const,
+        properties: {
+          purpose: { type: "string", description: "Echoes back the purpose that was matched" },
+          rationale: { type: "string", description: "Why these templates were picked" },
+          recommendations: { type: "array", items: { type: "string" }, description: "Ranked list of template IDs to pass to convert_document" }
+        },
+        required: ["recommendations"]
       }
     }
   ];
@@ -221,7 +404,7 @@ function createServer(): Server {
   return new Server(
     {
       name: 'mdmagic-mcp-server',
-      version: '1.7.0'
+      version: '1.7.1'
     },
     {
       capabilities: {
@@ -337,7 +520,7 @@ async function startHttp() {
             result: {
               protocolVersion: msg.params?.protocolVersion || '2024-11-05',
               capabilities: { tools: {} },
-              serverInfo: { name: 'mdmagic-mcp-server', version: '1.7.0' }
+              serverInfo: { name: 'mdmagic-mcp-server', version: '1.7.1', title: 'MDMagic — Markdown to professional documents' }
             }
           };
         case 'notifications/initialized':
