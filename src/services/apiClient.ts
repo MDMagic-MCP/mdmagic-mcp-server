@@ -45,8 +45,14 @@ export class MDMagicApiClient {
         throw new Error('Content is required for conversion');
       }
 
-      // Prepare the API payload
-      const payload = {
+      // Prepare the API payload.
+      // The backend reads `req.body.filename` (lowercase) at conversionController.js:186
+      // — match that casing exactly. We append `.md` so the backend treats it as
+      // a markdown source filename (the strip-extension/swap-extension logic
+      // there expects an extension on the input filename).
+      const filenameForApi = request.fileName ? `${request.fileName}.md` : undefined;
+
+      const payload: Record<string, unknown> = {
         content: request.content,
         templateId: request.templateId,
         pageSize: request.pageSize,
@@ -56,6 +62,9 @@ export class MDMagicApiClient {
         userApiKey: this.authManager.getConfig().apiKey,  // For security
         expectedCredits: request.expectedCredits  // Send calculated credits to API
       };
+      if (filenameForApi) {
+        payload.filename = filenameForApi;
+      }
 
       console.error(`[convertDocument] Calling API with format: ${Array.isArray(request.outputFormat) ? request.outputFormat.join(', ') : request.outputFormat}`);
 

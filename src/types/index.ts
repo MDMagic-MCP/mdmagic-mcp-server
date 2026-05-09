@@ -54,6 +54,7 @@ export interface ConvertApiRequest {
   pageSize: string;
   orientation: string;
   expectedCredits?: number;
+  fileName?: string;  // Optional output filename basename (no extension)
 }
 
 export interface ConvertApiResponse {

@@ -20,7 +20,7 @@ function getToolDefinitions() {
   return [
     {
       name: "convert_document",
-      description: "Convert markdown document to PDF or HTML using MDMagic templates. Supports text content, file paths, or base64 encoded content.",
+      description: "Convert markdown to a professionally formatted document using an MDMagic template.\n\nIMPORTANT GUIDANCE FOR USAGE:\n\n1. Output format meaning:\n   - 'docx' returns a single Word document (.docx)\n   - 'pdf' returns a single PDF (.pdf)\n   - 'html' returns a single HTML file (.html)\n   - 'all' returns a ZIP containing DOCX + PDF + HTML\n\n2. If the user is ambiguous (e.g. 'convert this'), ask them which format they want before calling this tool.\n\n3. If the user attached a file (e.g. 'mydoc.md'), pass its base name (without extension) as the fileName parameter so the output download has a meaningful name. Otherwise the API will derive a name from the markdown's first H1 heading. Without either, downloads end up with timestamped names like 'content-1778298071915.docx' which is bad UX.\n\n4. If you get a 'template not found' error, call list_all_templates first, show the user the available options, and let them pick a real one. Do NOT fall back to generating documents yourself with code execution — that produces inferior results that don't use the user's actual MDMagic templates.\n\n5. Available page sizes are A3, A4, Executive, US_Legal, US_Letter. Default A4 if not specified.",
       inputSchema: {
         type: "object" as const,
         properties: {
@@ -36,14 +36,18 @@ function getToolDefinitions() {
             type: "string",
             description: "Base64 encoded file content (alternative to content or filePath)"
           },
+          fileName: {
+            type: "string",
+            description: "Optional desired base name for the output file (without extension). If the user attached a file like 'mydoc.md', pass 'mydoc' here. The API will use this for the download filename. If omitted, the API derives one from the markdown's first H1 heading."
+          },
           templateName: {
             type: "string",
-            description: "Template to use for conversion (e.g., 'Academic_Grey', 'Corporate_Navy'). Use list_all_templates to see available options."
+            description: "Template to use for conversion. Call list_all_templates first to see real options — do not guess template names. Some templates are built-in (e.g. 'Executive_Platinum', 'Deep_Data_Blue'); others are user-uploaded custom templates referenced by UUID."
           },
           outputFormat: {
             type: "string",
             enum: ["docx", "pdf", "html", "all"],
-            description: "Output format: docx (DOCX only), pdf (DOCX+PDF), html (DOCX+HTML), all (DOCX+PDF+HTML)"
+            description: "Output format. 'docx', 'pdf', or 'html' return that single file; 'all' returns a ZIP with DOCX+PDF+HTML."
           },
           pageSize: {
             type: "string",

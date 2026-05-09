@@ -5,6 +5,56 @@ import { convertDocumentSchema } from '../utils/validation.js';
 import { MCPError } from '../utils/errorHandler.js';
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { CreditCalculator } from '../services/creditCalculator.js';
+import * as path from 'node:path';
+
+/**
+ * Produce a clean output filename from caller hints.
+ *
+ * Priority:
+ *   1. Explicit `fileName` argument from the MCP caller (basename, no extension).
+ *   2. The basename of `filePath` if the caller provided a file path.
+ *   3. Slug derived from the markdown's first H1 heading.
+ *   4. Undefined (let the API generate its own — last resort).
+ *
+ * The returned value is a plain basename (no extension, no path separators)
+ * so the API can append the right extension per format.
+ */
+function deriveFileName(
+  explicit: string | undefined,
+  filePath: string | undefined,
+  content: string | undefined,
+): string | undefined {
+  const sanitize = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')   // non-alphanum -> hyphen
+      .replace(/^-+|-+$/g, '')        // trim leading/trailing hyphens
+      .slice(0, 80);                   // cap length
+
+  if (explicit && explicit.trim()) {
+    // Strip any extension, sanitize
+    const base = path.basename(explicit, path.extname(explicit));
+    const cleaned = sanitize(base);
+    if (cleaned) return cleaned;
+  }
+
+  if (filePath && filePath.trim()) {
+    const base = path.basename(filePath, path.extname(filePath));
+    const cleaned = sanitize(base);
+    if (cleaned) return cleaned;
+  }
+
+  if (content) {
+    // First H1 heading — match `# Heading` not `## Heading`
+    const match = content.match(/^[ \t]*#[ \t]+(.+?)[ \t]*$/m);
+    if (match) {
+      const cleaned = sanitize(match[1]);
+      if (cleaned) return cleaned;
+    }
+  }
+
+  return undefined;
+}
 
 export async function handleConvertDocument(
   apiClient: MDMagicApiClient,
@@ -46,6 +96,17 @@ export async function handleConvertDocument(
 
     console.error(`[convert_document] Credit calculation: ${creditCalculation.breakdown}`);
 
+    // Derive output filename so downloads aren't named content-1234567890.pdf
+    const derivedFileName = deriveFileName(
+      input.fileName,
+      input.filePath,
+      processedContent.content,
+    );
+
+    if (derivedFileName) {
+      console.error(`[convert_document] Output filename: ${derivedFileName}`);
+    }
+
     // Call MDMagic API with calculated credits
     const result = await apiClient.convertDocument({
       content: processedContent.content,
@@ -53,7 +114,8 @@ export async function handleConvertDocument(
       outputFormat: outputFormats,  // Send array of formats
       pageSize: input.pageSize,
       orientation: input.orientation,
-      expectedCredits: creditCalculation.totalCredits
+      expectedCredits: creditCalculation.totalCredits,
+      fileName: derivedFileName
     });
 
     // Calculate expiration time (15 minutes from now)
