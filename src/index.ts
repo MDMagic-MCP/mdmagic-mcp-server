@@ -404,7 +404,7 @@ function createServer(): Server {
   return new Server(
     {
       name: 'mdmagic-mcp-server',
-      version: '1.7.2'
+      version: '1.7.3'
     },
     {
       capabilities: {
@@ -520,7 +520,7 @@ async function startHttp() {
             result: {
               protocolVersion: msg.params?.protocolVersion || '2024-11-05',
               capabilities: { tools: {} },
-              serverInfo: { name: 'mdmagic-mcp-server', version: '1.7.2', title: 'MDMagic — Markdown to professional documents' }
+              serverInfo: { name: 'mdmagic-mcp-server', version: '1.7.3', title: 'MDMagic — Markdown to professional documents' }
             }
           };
         case 'notifications/initialized':
