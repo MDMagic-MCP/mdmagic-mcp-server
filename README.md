@@ -4,7 +4,9 @@
 
 [![npm version](https://img.shields.io/npm/v/@mdmagic/mcp-server.svg)](https://www.npmjs.com/package/@mdmagic/mcp-server)
 [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-listed-blue)](https://registry.modelcontextprotocol.io)
-[![Smithery](https://img.shields.io/badge/Smithery-mdmagic--mcp--server-orange)](https://smithery.ai/server/mdmagic/mdmagic-mcp-server)
+[![Smithery](https://img.shields.io/badge/Smithery-listed-orange)](https://smithery.ai/server/mdmagic/mdmagic-mcp-server)
+[![Glama](https://img.shields.io/badge/Glama-listed-purple)](https://glama.ai/mcp/servers/MDMagic-MCP/mdmagic-mcp-server)
+[![mcp.so](https://img.shields.io/badge/mcp.so-listed-green)](https://mcp.so)
 [![license](https://img.shields.io/npm/l/@mdmagic/mcp-server.svg)](LICENSE)
 
 MDMagic plugs straight into Claude, Cursor, VS Code, and any MCP-compatible AI assistant — giving them direct access to a professional document conversion pipeline (Pandoc + Microsoft Graph + Mammoth.js) and, more importantly, **your templates**. Upload your existing letterhead, stationery, brand guidelines, contract shells, or proposal templates — anything you already use in Microsoft Word — and your AI assistant can convert any Markdown directly into a polished document carrying *your* logo, fonts, colours, footers, page numbers, watermarks, and signature blocks. The output looks like it came from your design team, not from a generic AI export.
