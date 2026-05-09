@@ -404,7 +404,7 @@ function createServer(): Server {
   return new Server(
     {
       name: 'mdmagic-mcp-server',
-      version: '1.7.1'
+      version: '1.7.2'
     },
     {
       capabilities: {
@@ -520,7 +520,7 @@ async function startHttp() {
             result: {
               protocolVersion: msg.params?.protocolVersion || '2024-11-05',
               capabilities: { tools: {} },
-              serverInfo: { name: 'mdmagic-mcp-server', version: '1.7.1', title: 'MDMagic — Markdown to professional documents' }
+              serverInfo: { name: 'mdmagic-mcp-server', version: '1.7.2', title: 'MDMagic — Markdown to professional documents' }
             }
           };
         case 'notifications/initialized':
@@ -607,9 +607,17 @@ async function startHttp() {
 
     // New session — create auth manager, api client, server, and transport
     try {
-      // Set API key in env temporarily for AuthManager
+      // Optional per-session defaults from request headers. These let
+      // power users (and Smithery's gateway) preconfigure preferences
+      // without having to specify them on every tool call.
+      const sessionDefaults = {
+        defaultTemplate: req.headers['x-mdmagic-default-template'] as string | undefined,
+        defaultPageSize: req.headers['x-mdmagic-default-page-size'] as string | undefined,
+        defaultOrientation: req.headers['x-mdmagic-default-orientation'] as string | undefined,
+      };
+
       const authManager = new AuthManager(apiKey);
-      const apiClient = new MDMagicApiClient(authManager);
+      const apiClient = new MDMagicApiClient(authManager, sessionDefaults);
 
       // Validate connection with the provided API key
       const connectionTest = await apiClient.testConnection();

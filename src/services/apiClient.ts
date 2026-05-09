@@ -10,13 +10,21 @@ import {
   ProcessedContent
 } from '../types/index.js';
 
+export interface SessionDefaults {
+  defaultTemplate?: string;
+  defaultPageSize?: string;
+  defaultOrientation?: string;
+}
+
 export class MDMagicApiClient {
   private _client: AxiosInstance;
   private authManager: AuthManager;
+  public readonly sessionDefaults: SessionDefaults;
 
-  constructor(authManager: AuthManager) {
+  constructor(authManager: AuthManager, sessionDefaults: SessionDefaults = {}) {
     this.authManager = authManager;
-    
+    this.sessionDefaults = sessionDefaults;
+
     this._client = axios.create({
       baseURL: this.authManager.getBaseUrl(),
       timeout: this.authManager.getTimeout(),

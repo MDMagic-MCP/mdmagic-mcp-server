@@ -3,7 +3,7 @@
   "name": "io.github.MDMagic-MCP/mdmagic-mcp-server",
   "title": "MDMagic — Markdown to professional documents",
   "description": "Turn Markdown into boardroom-grade DOCX, PDF, and HTML directly from Claude, Cursor, VS Code, or any MCP-compatible AI assistant. Powered by MDMagic's Pandoc + Microsoft Graph + Mammoth.js pipeline with 15 designer-built templates (Business, Creative, Professional, Technical) and zero permanent storage.",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "repository": {
     "url": "https://github.com/MDMagic-MCP/mdmagic-mcp-server",
     "source": "github"
@@ -35,7 +35,7 @@
     {
       "registryType": "npm",
       "identifier": "@mdmagic/mcp-server",
-      "version": "1.7.1",
+      "version": "1.7.2",
       "transport": {
         "type": "stdio"
       },

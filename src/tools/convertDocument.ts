@@ -63,8 +63,22 @@ export async function handleConvertDocument(
   const fileProcessor = new FileProcessor();
 
   try {
+    // Apply session-level defaults from per-connection headers BEFORE
+    // validation, so missing fields get filled in from sessionDefaults
+    // rather than rejected by Zod.
+    const argsWithDefaults: any = { ...(args || {}) };
+    if (!argsWithDefaults.templateName && apiClient.sessionDefaults.defaultTemplate) {
+      argsWithDefaults.templateName = apiClient.sessionDefaults.defaultTemplate;
+    }
+    if (!argsWithDefaults.pageSize && apiClient.sessionDefaults.defaultPageSize) {
+      argsWithDefaults.pageSize = apiClient.sessionDefaults.defaultPageSize;
+    }
+    if (!argsWithDefaults.orientation && apiClient.sessionDefaults.defaultOrientation) {
+      argsWithDefaults.orientation = apiClient.sessionDefaults.defaultOrientation;
+    }
+
     // Validate input using Zod schema
-    const input = convertDocumentSchema.parse(args);
+    const input = convertDocumentSchema.parse(argsWithDefaults);
 
     console.error(`[convert_document] Starting conversion: ${input.templateName} → ${input.outputFormat}`);
 
