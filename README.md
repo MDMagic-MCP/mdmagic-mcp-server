@@ -3,6 +3,8 @@
 > Convert Markdown to professional DOCX, PDF, and HTML — directly from Claude, Cursor, VS Code, or any MCP-compatible AI assistant.
 
 [![npm version](https://img.shields.io/npm/v/@mdmagic/mcp-server.svg)](https://www.npmjs.com/package/@mdmagic/mcp-server)
+[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-listed-blue)](https://registry.modelcontextprotocol.io)
+[![Smithery](https://img.shields.io/badge/Smithery-mdmagic--mcp--server-orange)](https://smithery.ai/server/mdmagic/mdmagic-mcp-server)
 [![license](https://img.shields.io/npm/l/@mdmagic/mcp-server.svg)](LICENSE)
 
 Your AI assistant writes great Markdown. Exporting it has always been the bottleneck. This MCP server gives Claude (and any other MCP-compatible client) direct access to MDMagic's professional document conversion pipeline — Pandoc + Microsoft Graph API + 15 designer-built templates — so the AI can produce boardroom-grade documents in a single tool call.
