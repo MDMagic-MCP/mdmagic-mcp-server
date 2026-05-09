@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.MDMagic-MCP/mdmagic-mcp-server",
   "title": "MDMagic — Markdown to professional documents",
-  "description": "Turn Markdown into professional DOCX, PDF, and HTML using MDMagic templates from any MCP AI client.",
-  "version": "1.7.4",
+  "description": "Use your own Word templates to convert Markdown → DOCX/PDF/HTML from any MCP-compatible AI.",
+  "version": "1.7.5",
   "repository": {
     "url": "https://github.com/MDMagic-MCP/mdmagic-mcp-server",
     "source": "github"
@@ -35,7 +35,7 @@
     {
       "registryType": "npm",
       "identifier": "@mdmagic/mcp-server",
-      "version": "1.7.4",
+      "version": "1.7.5",
       "transport": {
         "type": "stdio"
       },
