@@ -8,7 +8,7 @@
 Your AI assistant writes great Markdown. Exporting it has always been the bottleneck. This MCP server gives Claude (and any other MCP-compatible client) direct access to MDMagic's professional document conversion pipeline — Pandoc + Microsoft Graph API + 15 designer-built templates — so the AI can produce boardroom-grade documents in a single tool call.
 
 ```
-You: "Take this report and turn it into a Corporate_Navy PDF."
+You: "Take this report and turn it into an Executive_Platinum PDF."
 
 Claude: ✅ Done. Here's your secure download link.
         14-page PDF, 2.3 MB, expires in 60 minutes.
@@ -100,10 +100,10 @@ Same tools, same templates, served over Streamable HTTP. Useful for clients that
 
 Once connected, ask your AI assistant things like:
 
-- *"Convert this markdown to a PDF using the Academic_Grey template."*
+- *"Convert this markdown to a PDF using the Executive_Platinum template."*
 - *"What templates do I have available?"*
 - *"How many credits will it cost to render this 800-word report as DOCX + PDF?"*
-- *"Render this in landscape, US Letter, with the Corporate_Navy template."*
+- *"Render this in landscape, US Letter, with the Legal_Burgundy template."*
 - *"Check my credit balance."*
 
 The AI picks the right tool and returns a secure, time-limited download link.
@@ -113,11 +113,14 @@ The AI picks the right tool and returns a secure, time-limited download link.
 | Tool | What it does |
 |---|---|
 | `convert_document` | Convert Markdown → DOCX / PDF / HTML / all three. Returns a secure expiring URL. |
+| `validate_markdown` | Pre-flight check before conversion. Catches malformed tables, unclosed code fences, and other syntax issues that would produce broken output. |
 | `estimate_conversion_cost` | Pre-flight cost estimate based on word count, page count, format, and template type. |
 | `check_credit_balance` | Current credit balance (subscription + purchased pools), plan status. |
-| `list_all_templates` | Full template catalog: 15 built-in families + your custom uploads. |
-| `list_builtin_templates` | Only the built-in templates (Academic, Corporate, Modern, etc.). |
+| `list_all_templates` | Full template catalog: 15 built-in templates (grouped by category) + your custom uploads. |
+| `list_builtin_templates` | Only the built-in templates: Business (5), Creative (6), Professional (2), Technical (2). |
 | `list_custom_templates` | Only your custom uploaded templates. |
+| `get_template_details` | Show available variants (page sizes × orientations) for a specific template. |
+| `recommend_template` | Suggest the best built-in template for a described purpose ("Q4 board pack" → Executive_Platinum). |
 | `show_default_settings` | Your default page size, orientation, and template preferences. |
 
 ### `convert_document` — input options
@@ -130,7 +133,7 @@ Three ways to provide the source:
 
 Plus:
 
-- `templateName` — e.g. `Academic_Grey`, `Corporate_Navy`, or a custom template UUID
+- `templateName` — e.g. `Executive_Platinum`, `Legal_Burgundy`, or a custom template UUID
 - `outputFormat` — `docx`, `pdf`, `html`, `all`, or `all-formats`
 - `pageSize` — `A4`, `A3`, `US_Letter`, `US_Legal`, `Executive`
 - `orientation` — `Portrait` or `Landscape`

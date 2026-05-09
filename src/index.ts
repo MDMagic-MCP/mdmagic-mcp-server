@@ -20,7 +20,7 @@ function getToolDefinitions() {
   return [
     {
       name: "convert_document",
-      description: "Convert markdown to a professionally formatted document using an MDMagic template.\n\nIMPORTANT GUIDANCE FOR USAGE:\n\n1. Output format meaning:\n   - 'docx' returns a single Word document (.docx)\n   - 'pdf' returns a single PDF (.pdf)\n   - 'html' returns a single HTML file (.html)\n   - 'all' returns a ZIP containing DOCX + PDF + HTML\n\n2. If the user is ambiguous (e.g. 'convert this'), ask them which format they want before calling this tool.\n\n3. If the user attached a file (e.g. 'mydoc.md'), pass its base name (without extension) as the fileName parameter so the output download has a meaningful name. Otherwise the API will derive a name from the markdown's first H1 heading. Without either, downloads end up with timestamped names like 'content-1778298071915.docx' which is bad UX.\n\n4. If you get a 'template not found' error, call list_all_templates first, show the user the available options, and let them pick a real one. Do NOT fall back to generating documents yourself with code execution — that produces inferior results that don't use the user's actual MDMagic templates.\n\n5. Available page sizes are A3, A4, Executive, US_Legal, US_Letter. Default A4 if not specified.",
+      description: "Convert markdown to a professionally formatted document using an MDMagic template.\n\nIMPORTANT GUIDANCE:\n\n1. Output format → what user gets:\n   - 'docx' → a single Word .docx file\n   - 'pdf' → a single .pdf file\n   - 'html' → a single .html file\n   - 'all' → a ZIP containing all three (DOCX + PDF + HTML)\n\n2. If the user is ambiguous (e.g. 'convert this'), ASK which format they want before calling. Don't assume.\n\n3. Filename: if the user attached a file (e.g. 'mydoc.md'), pass its base name as fileName. Otherwise the API derives one from the markdown's first H1. Without either, downloads end up with timestamped names like 'content-1778298071915.docx' which is bad UX.\n\n4. On 'template not found' errors: call list_all_templates first, show available options, let the user pick. Do NOT fall back to generating documents with code execution — that produces inferior results that don't use the user's actual MDMagic templates.\n\n5. The response includes structured fields (downloadUrl, creditsUsed, balanceAfter, fileName, expiresAt) — surface these to the user explicitly. Don't paraphrase. The user wants to know exactly what they spent and what's left.\n\n6. Page sizes: A3, A4, Executive, US_Legal, US_Letter. Default A4. Orientation: Portrait or Landscape, default Portrait.",
       inputSchema: {
         type: "object" as const,
         properties: {
@@ -65,33 +65,43 @@ function getToolDefinitions() {
     },
     {
       name: "list_all_templates",
-      description: "List all available templates (both built-in and custom) for document conversion",
+      description: "List all 15 built-in MDMagic templates plus any custom templates the user has uploaded.\n\nCALL THIS PROACTIVELY when:\n- The user mentions a template by name (verify it exists before convert_document)\n- The user asks 'what templates are available' or similar\n- A previous convert_document call returned 'template not found'\n- The user describes the look they want without naming a template (so you can suggest a real one)\n\nReturns: name, description, type (built-in vs custom), and category. Categories are: Business (5 templates), Creative (6), Professional (2), Technical (2). Use the optional category filter to narrow recommendations (e.g. 'for legal documents' → category: 'Professional').",
       inputSchema: {
         type: "object" as const,
         properties: {
           includeDetails: {
             type: "boolean",
             description: "Include template details like available page sizes and orientations (default: false)"
+          },
+          category: {
+            type: "string",
+            enum: ["Business", "Creative", "Professional", "Technical"],
+            description: "Optional filter — return only built-in templates in this category. Custom templates are always included regardless. Categories: Business (executive/financial), Creative (designer/artistic/novelty), Professional (legal), Technical (code/data documentation)."
           }
         }
       }
     },
     {
       name: "list_builtin_templates",
-      description: "List only built-in templates provided by MDMagic",
+      description: "List the 15 built-in MDMagic templates, grouped by category. Same as list_all_templates but excludes the user's custom uploads. Use this when the user asks specifically about MDMagic's bundled templates rather than their personal ones.\n\nCategories available: Business (5), Creative (6), Professional (2), Technical (2).",
       inputSchema: {
         type: "object" as const,
         properties: {
           includeDetails: {
             type: "boolean",
             description: "Include template details like available page sizes and orientations (default: false)"
+          },
+          category: {
+            type: "string",
+            enum: ["Business", "Creative", "Professional", "Technical"],
+            description: "Optional filter — return only templates in this category."
           }
         }
       }
     },
     {
       name: "list_custom_templates",
-      description: "List only custom user-uploaded templates",
+      description: "List only the user's custom-uploaded Word templates. Use this when the user asks about their own templates ('show me my templates', 'do I have a letterhead?'). Custom templates are referenced by UUID, not name, when calling convert_document.",
       inputSchema: {
         type: "object" as const,
         properties: {
@@ -104,7 +114,7 @@ function getToolDefinitions() {
     },
     {
       name: "show_default_settings",
-      description: "Show user's default paper size and orientation settings",
+      description: "Show the user's default paper size and orientation preferences (set on their account page). Useful when the user hasn't specified pageSize/orientation explicitly — call this to honor their defaults instead of using A4/Portrait blindly.",
       inputSchema: {
         type: "object" as const,
         properties: {}
@@ -112,7 +122,7 @@ function getToolDefinitions() {
     },
     {
       name: "check_credit_balance",
-      description: "Check your current credit balance across subscription and purchased credits",
+      description: "Check the user's current MDMagic credit balance: subscription credits (renewable monthly), purchased credits (permanent), plan name, and plan status.\n\nCALL THIS PROACTIVELY when:\n- The user asks 'how many credits do I have' or similar\n- After a conversion, if the user wants to know what's left (also returned by convert_document directly)\n- Before a conversion of an unusually large document, to warn the user if balance is borderline",
       inputSchema: {
         type: "object" as const,
         properties: {},
@@ -121,7 +131,7 @@ function getToolDefinitions() {
     },
     {
       name: "estimate_conversion_cost",
-      description: "Estimate credit cost for a conversion without performing it. Shows word count, page calculation, and detailed credit breakdown.",
+      description: "Estimate credit cost for a conversion BEFORE running it. Returns word count, page calculation (300 words/page), and a credit breakdown by format and template type. Use this when the user asks 'how much will this cost?' or when you suspect a conversion might exceed their balance — convert_document refuses to run if credits are insufficient, so estimating first is friendlier.",
       inputSchema: {
         type: "object" as const,
         properties: {
@@ -151,6 +161,58 @@ function getToolDefinitions() {
         },
         required: ["content", "templateName", "outputFormat"]
       }
+    },
+    {
+      name: "validate_markdown",
+      description: "Pre-flight markdown validation BEFORE conversion. Catches malformed tables (mismatched pipes), unclosed code fences, broken task lists, and unsupported syntax. Returns a green/amber/red status plus the detected markdown features.\n\nCALL THIS PROACTIVELY when:\n- The user is about to convert a long document (>5 pages) — validating first is cheap; running a doomed conversion costs credits\n- The user reports a previous conversion produced broken output\n- You generated the markdown yourself and want to verify it's clean before spending credits\n\nReturns: status (green=safe, amber=minor issues, red=will likely break), detected features (tables, code blocks, task lists, math), and a human-readable message.",
+      inputSchema: {
+        type: "object" as const,
+        properties: {
+          content: {
+            type: "string",
+            description: "Markdown content to validate"
+          },
+          filename: {
+            type: "string",
+            description: "Optional filename label for the response (defaults to 'content.md')"
+          }
+        },
+        required: ["content"]
+      }
+    },
+    {
+      name: "get_template_details",
+      description: "Show available variants (page sizes and orientations) for a specific template. All MDMagic templates support the full 5×2 matrix: A3, A4, Executive, US_Legal, US_Letter × Portrait/Landscape. Use this when the user asks 'does this template come in Legal Landscape?' or 'what sizes are available?' — confirms the variant before convert_document runs.",
+      inputSchema: {
+        type: "object" as const,
+        properties: {
+          templateName: {
+            type: "string",
+            description: "Template ID or name (e.g. Executive_Platinum, or a UUID for custom templates)"
+          }
+        },
+        required: ["templateName"]
+      }
+    },
+    {
+      name: "recommend_template",
+      description: "Suggest the best built-in template(s) for a described purpose. Use this when the user describes WHAT the document is (e.g. 'Q4 board pack', 'API reference', 'wedding invitation', 'legal contract') without naming a template. Returns ranked recommendations with rationale.\n\nWhy this exists: AI assistants often guess template names that don't exist. This tool maps purpose → real template names from MDMagic's catalog, so convert_document doesn't fail with 'template not found'.",
+      inputSchema: {
+        type: "object" as const,
+        properties: {
+          purpose: {
+            type: "string",
+            description: "Free-text description of the document's purpose. Examples: 'Q4 board pack for investors', 'restaurant menu', 'developer API documentation', 'wedding invitation'."
+          },
+          topN: {
+            type: "integer",
+            minimum: 1,
+            maximum: 5,
+            description: "How many recommendations to return (1-5, default 3)"
+          }
+        },
+        required: ["purpose"]
+      }
     }
   ];
 }
@@ -159,7 +221,7 @@ function createServer(): Server {
   return new Server(
     {
       name: 'mdmagic-mcp-server',
-      version: '1.0.0'
+      version: '1.7.0'
     },
     {
       capabilities: {
@@ -226,12 +288,115 @@ async function startHttp() {
     res.json({ status: 'ok', transport: 'streamable-http', sessions: sessions.size });
   });
 
+  // Detect "discovery" requests that should work without an API key.
+  // Discovery scanners (Smithery, the official MCP registry, glama, mcp.so)
+  // probe `initialize` and `tools/list` to enumerate capabilities. We let
+  // those through unauthenticated so the server gets indexed; any actual
+  // tool execution (`tools/call`) still requires a valid API key.
+  const DISCOVERY_METHODS = new Set([
+    'initialize',
+    'notifications/initialized',
+    'tools/list',
+    'resources/list',
+    'resources/templates/list',
+    'prompts/list',
+    'ping'
+  ]);
+
+  function isDiscoveryRequest(body: any): boolean {
+    if (!body) return false;
+    if (typeof body === 'object' && !Array.isArray(body) && typeof body.method === 'string') {
+      return DISCOVERY_METHODS.has(body.method);
+    }
+    if (Array.isArray(body) && body.length > 0) {
+      return body.every((msg: any) =>
+        msg && typeof msg.method === 'string' && DISCOVERY_METHODS.has(msg.method)
+      );
+    }
+    return false;
+  }
+
+  // Stateless JSON-RPC handler for unauthenticated discovery probes.
+  // Bypasses the SDK's session/protocol state machine — directories
+  // (Smithery, MCP registry, glama, mcp.so) issue standalone JSON-RPC
+  // calls without tracking sessions, so we answer them directly.
+  // Tools/call is intentionally NOT handled here; it will fall through
+  // to the auth gate above and 401.
+  function handleDiscoveryProbe(req: express.Request, res: express.Response): void {
+    const body = req.body;
+
+    function answerOne(msg: any): any {
+      if (!msg || typeof msg.method !== 'string') {
+        return { jsonrpc: '2.0', id: msg?.id ?? null, error: { code: -32600, message: 'Invalid Request' } };
+      }
+      switch (msg.method) {
+        case 'initialize':
+          return {
+            jsonrpc: '2.0',
+            id: msg.id,
+            result: {
+              protocolVersion: msg.params?.protocolVersion || '2024-11-05',
+              capabilities: { tools: {} },
+              serverInfo: { name: 'mdmagic-mcp-server', version: '1.7.0' }
+            }
+          };
+        case 'notifications/initialized':
+          // Notifications carry no response
+          return null;
+        case 'tools/list':
+          return {
+            jsonrpc: '2.0',
+            id: msg.id,
+            result: { tools: getToolDefinitions() }
+          };
+        case 'resources/list':
+          // We don't expose any resources; declare empty so directories
+          // (Smithery, registry, glama) don't flag a "method not found" warning.
+          return { jsonrpc: '2.0', id: msg.id, result: { resources: [] } };
+        case 'resources/templates/list':
+          return { jsonrpc: '2.0', id: msg.id, result: { resourceTemplates: [] } };
+        case 'prompts/list':
+          // No pre-canned prompts shipped. Same reason as resources/list.
+          return { jsonrpc: '2.0', id: msg.id, result: { prompts: [] } };
+        case 'ping':
+          return { jsonrpc: '2.0', id: msg.id, result: {} };
+        default:
+          return { jsonrpc: '2.0', id: msg.id, error: { code: -32601, message: `Method not found: ${msg.method}` } };
+      }
+    }
+
+    if (Array.isArray(body)) {
+      const out = body.map(answerOne).filter(r => r !== null);
+      res.status(200).json(out);
+      return;
+    }
+    const reply = answerOne(body);
+    if (reply === null) {
+      res.status(202).end();
+      return;
+    }
+    res.status(200).json(reply);
+  }
+
   // MCP endpoint — handles POST (messages), GET (SSE stream), DELETE (session close)
   app.all('/mcp', async (req, res) => {
     // Extract API key from request headers
     const apiKey = req.headers['x-api-key'] as string | undefined;
+    const isDiscovery = req.method === 'POST' && isDiscoveryRequest(req.body);
 
     if (!apiKey) {
+      if (isDiscovery) {
+        // Unauthenticated discovery probe — serve metadata only
+        try {
+          handleDiscoveryProbe(req, res);
+        } catch (error: any) {
+          console.error('[HTTP] Discovery probe error:', error.message);
+          if (!res.headersSent) {
+            res.status(500).json({ error: `Discovery failed: ${error.message}` });
+          }
+        }
+        return;
+      }
       res.status(401).json({ error: 'x-api-key header is required' });
       return;
     }

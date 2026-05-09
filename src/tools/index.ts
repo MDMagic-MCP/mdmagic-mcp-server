@@ -7,6 +7,9 @@ import { handleConvertDocument } from './convertDocument.js';
 import { handleListAllTemplates, handleListBuiltinTemplates, handleListCustomTemplates } from './listTemplates.js';
 import { handleShowDefaultSettings } from './userSettings.js';
 import { handleCheckCreditBalance, handleEstimateConversionCost } from './creditTools.js';
+import { handleValidateMarkdown } from './validateMarkdown.js';
+import { handleGetTemplateDetails } from './getTemplateDetails.js';
+import { handleRecommendTemplate } from './recommendTemplate.js';
 
 export async function registerAllTools(
   server: Server,
@@ -44,7 +47,16 @@ export async function registerAllTools(
           
         case 'estimate_conversion_cost':
           return await handleEstimateConversionCost(creditCalculator, request.params.arguments);
-          
+
+        case 'validate_markdown':
+          return await handleValidateMarkdown(apiClient, request.params.arguments);
+
+        case 'get_template_details':
+          return await handleGetTemplateDetails(apiClient, request.params.arguments);
+
+        case 'recommend_template':
+          return await handleRecommendTemplate(apiClient, request.params.arguments);
+
         default:
           throw new Error(`Unknown tool: ${toolName}`);
       }
@@ -63,5 +75,5 @@ export async function registerAllTools(
   });
 
   console.error('✅ All MCP tools registered successfully with unified handler');
-  console.error('📋 Available tools: convert_document, list_all_templates, list_builtin_templates, list_custom_templates, show_default_settings, check_credit_balance, estimate_conversion_cost');
+  console.error('📋 Available tools: convert_document, list_all_templates, list_builtin_templates, list_custom_templates, show_default_settings, check_credit_balance, estimate_conversion_cost, validate_markdown, get_template_details, recommend_template');
 }

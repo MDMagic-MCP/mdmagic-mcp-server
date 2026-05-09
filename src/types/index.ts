@@ -35,6 +35,7 @@ export interface TemplateInfo {
   id: string;
   name: string;
   type: 'built-in' | 'custom';
+  category?: string | null;
   description?: string;
   variants: Array<{
     pageSize: string;

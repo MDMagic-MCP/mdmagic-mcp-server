@@ -112,6 +112,21 @@ export class MDMagicApiClient {
     return response.data;
   }
 
+  async validateMarkdownContent(content: string, filename?: string): Promise<{
+    filename: string;
+    status: 'green' | 'amber' | 'red' | string;
+    message: string;
+    inputFormat: string | null;
+    additionalPandocFlags: string[];
+    detectedFeatures: Record<string, any>;
+  }> {
+    const response: AxiosResponse = await this._client.post('/api/validate-markdown/content', {
+      content,
+      filename: filename || 'content.md'
+    });
+    return response.data;
+  }
+
   async testConnection(): Promise<boolean> {
     try {
       await this._client.get('/health');

@@ -23,12 +23,14 @@ export const convertDocumentSchema = z.object({
 
 // Template listing schema
 export const listTemplatesSchema = z.object({
-  includeDetails: z.boolean().default(false).describe("Include template details like page sizes and orientations")
+  includeDetails: z.boolean().default(false).describe("Include template details like page sizes and orientations"),
+  category: z.enum(['Business', 'Creative', 'Professional', 'Technical']).optional().describe("Filter built-in templates by category. Custom templates are always included regardless.")
 });
 
-// Built-in templates schema  
+// Built-in templates schema
 export const listBuiltinTemplatesSchema = z.object({
-  includeDetails: z.boolean().default(false).describe("Include template details")
+  includeDetails: z.boolean().default(false).describe("Include template details"),
+  category: z.enum(['Business', 'Creative', 'Professional', 'Technical']).optional().describe("Filter by category: Business (5 templates), Creative (6), Professional (2), Technical (2).")
 });
 
 // Custom templates schema

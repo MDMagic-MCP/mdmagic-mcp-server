@@ -118,22 +118,34 @@ export async function handleConvertDocument(
       fileName: derivedFileName
     });
 
-    // Calculate expiration time (15 minutes from now)
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    const r = result as any;
+    const apiExpiresAt = r.expiresAt as string | undefined;
+    const apiFileName = r.fileName as string | undefined;
+    const creditsUsed = r.creditsUsed as number | undefined;
+    const balanceAfter = r.balanceAfter as number | undefined;
 
-    console.error(`[convert_document] Conversion successful: ${result.downloadUrl}`);
+    // Fall back to a 60-min estimate if API didn't return expiresAt (older API builds)
+    const expiresAtDisplay = apiExpiresAt || new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+    console.error(`[convert_document] Conversion successful: ${result.downloadUrl} (${creditsUsed ?? '?'} credits, ${balanceAfter ?? '?'} remaining)`);
+
+    const lines = [
+      '✅ **Document converted successfully!**',
+      '',
+      `📁 **Download**: [${apiFileName || 'Click here to download'}](${result.downloadUrl})`,
+    ];
+    if (apiFileName) lines.push(`📄 **File**: ${apiFileName}`);
+    if (creditsUsed !== undefined) lines.push(`📊 **Credits used**: ${creditsUsed}`);
+    if (balanceAfter !== undefined) lines.push(`💰 **Balance remaining**: ${balanceAfter}`);
+    lines.push(`⏰ **Expires**: ${expiresAtDisplay}`);
+    lines.push('');
+    lines.push('💡 Your document is ready! The link expires in 60 minutes.');
 
     return {
       content: [
         {
-          type: "text",
-          text: `✅ **Document converted successfully!**
-
-📁 **Download**: [Click here to download](${result.downloadUrl})
-📊 **Credits Used**: ${(result as any).creditsUsed || 'Credit info not available'}
-⏰ **Expires**: ${expiresAt}
-
-💡 Your document is ready! The download link will expire in 15 minutes.`
+          type: 'text',
+          text: lines.join('\n')
         }
       ]
     };
