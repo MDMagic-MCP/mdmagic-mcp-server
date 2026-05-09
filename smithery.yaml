@@ -4,12 +4,12 @@
 # Server metadata — surfaced on the Smithery listing page
 displayName: "MDMagic — Markdown to professional documents"
 description: >-
-  Turn Markdown into boardroom-grade DOCX, PDF, and HTML directly from Claude,
-  Cursor, VS Code, or any MCP-compatible AI assistant. 15 designer-built
-  templates across Business, Creative, Professional, and Technical categories.
-  Pre-flight cost estimation, balance checks, and zero permanent storage.
+  Convert Markdown to DOCX, PDF, and HTML using your own Word templates —
+  your letterhead, your branding, your fonts. Plus 15 designer-built
+  templates across Business, Creative, Professional, and Technical
+  categories. Works with Claude, Cursor, VS Code, and any MCP-compatible AI.
 
-icon: https://mdmagic.ai/favicon.png
+icon: https://mdmagic.ai/mdmagic-logo.png
 homepage: https://mdmagic.ai/mcp
 repository: https://github.com/MDMagic-MCP/mdmagic-mcp-server
 license: MIT

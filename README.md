@@ -1,13 +1,13 @@
 # MDMagic MCP Server
 
-> Convert Markdown to professional DOCX, PDF, and HTML — directly from Claude, Cursor, VS Code, or any MCP-compatible AI assistant.
+> **Convert Markdown to DOCX, PDF, and HTML using your own Word templates — your letterhead, your branding, your fonts.** Plus 15 designer-built templates for when you don't have your own.
 
 [![npm version](https://img.shields.io/npm/v/@mdmagic/mcp-server.svg)](https://www.npmjs.com/package/@mdmagic/mcp-server)
 [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-listed-blue)](https://registry.modelcontextprotocol.io)
 [![Smithery](https://img.shields.io/badge/Smithery-mdmagic--mcp--server-orange)](https://smithery.ai/server/mdmagic/mdmagic-mcp-server)
 [![license](https://img.shields.io/npm/l/@mdmagic/mcp-server.svg)](LICENSE)
 
-Your AI assistant writes great Markdown. Exporting it has always been the bottleneck. This MCP server gives Claude (and any other MCP-compatible client) direct access to MDMagic's professional document conversion pipeline — Pandoc + Microsoft Graph API + 15 designer-built templates — so the AI can produce boardroom-grade documents in a single tool call.
+MDMagic plugs straight into Claude, Cursor, VS Code, and any MCP-compatible AI assistant — giving them direct access to a professional document conversion pipeline (Pandoc + Microsoft Graph + Mammoth.js) and, more importantly, **your templates**. Upload your existing letterhead, stationery, brand guidelines, contract shells, or proposal templates — anything you already use in Microsoft Word — and your AI assistant can convert any Markdown directly into a polished document carrying *your* logo, fonts, colours, footers, page numbers, watermarks, and signature blocks. The output looks like it came from your design team, not from a generic AI export.
 
 ```
 You: "Take this report and turn it into an Executive_Platinum PDF."
