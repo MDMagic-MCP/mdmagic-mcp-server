@@ -1,0 +1,25 @@
+# MDMagic MCP server — Glama safety-check Dockerfile
+# Hosted on Glama's side; no need to commit this file to the repo.
+#
+# Glama's scanner builds this image, runs the MCP server, and probes:
+#   - initialize  (no API key required)
+#   - tools/list  (no API key required)
+#   - resources/list, prompts/list, ping
+# All discovery probes are public; no MDMAGIC_API_KEY required to pass safety
+# checks. Tool execution (tools/call) requires a real key — not exercised by
+# the scanner.
+
+FROM node:22-alpine
+
+# Install the MCP server globally from npm
+RUN npm install -g @mdmagic/mcp-server@latest
+
+# Stdio transport is the default; no env vars required for a discovery scan.
+# A real user would set MDMAGIC_API_KEY at runtime; the scanner does not.
+ENV MCP_TRANSPORT=stdio
+
+# Health endpoint for HTTP transport mode (unused in stdio scan, but harmless)
+EXPOSE 3001
+
+# Entrypoint: run the MCP server in stdio mode (its package.json bin)
+ENTRYPOINT ["mdmagic-mcp"]
