@@ -31,7 +31,7 @@ Add this to your `claude_desktop_config.json`:
   "mcpServers": {
     "mdmagic": {
       "command": "npx",
-      "args": ["-y", "@mdmagic/mcp-server"],
+      "args": ["-y", "@mdmagic/mcp-server@latest"],
       "env": {
         "MDMAGIC_API_KEY": "mdmagic-xxxxxxxxxxxxxxxx"
       }
@@ -56,7 +56,7 @@ Add to `~/.cursor/mcp.json` (or via Settings → MCP):
   "mcpServers": {
     "mdmagic": {
       "command": "npx",
-      "args": ["-y", "@mdmagic/mcp-server"],
+      "args": ["-y", "@mdmagic/mcp-server@latest"],
       "env": {
         "MDMAGIC_API_KEY": "mdmagic-xxxxxxxxxxxxxxxx"
       }
@@ -72,7 +72,7 @@ Add to `~/.cursor/mcp.json` (or via Settings → MCP):
   "mcp.servers": {
     "mdmagic": {
       "command": "npx",
-      "args": ["-y", "@mdmagic/mcp-server"],
+      "args": ["-y", "@mdmagic/mcp-server@latest"],
       "env": {
         "MDMAGIC_API_KEY": "mdmagic-xxxxxxxxxxxxxxxx"
       }

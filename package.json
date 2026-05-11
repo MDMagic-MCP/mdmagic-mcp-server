@@ -1,6 +1,6 @@
 {
   "name": "@mdmagic/mcp-server",
-  "version": "1.7.6",
+  "version": "1.7.7",
   "mcpName": "io.github.MDMagic-MCP/mdmagic-mcp-server",
   "description": "Model Context Protocol server for MDMagic — convert Markdown to professional DOCX, PDF, and HTML using MDMagic templates.",
   "main": "build/index.js",

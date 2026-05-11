@@ -37,7 +37,7 @@ function getToolDefinitions() {
   return [
     {
       name: "convert_document",
-      description: "Convert markdown to a professionally formatted document using an MDMagic template.\n\nIMPORTANT GUIDANCE:\n\n1. Output format → what user gets:\n   - 'docx' → a single Word .docx file\n   - 'pdf' → a single .pdf file\n   - 'html' → a single .html file\n   - 'all' → a ZIP containing all three (DOCX + PDF + HTML)\n\n2. If the user is ambiguous (e.g. 'convert this'), ASK which format they want before calling. Don't assume.\n\n3. Filename: if the user attached a file (e.g. 'mydoc.md'), pass its base name as fileName. Otherwise the API derives one from the markdown's first H1. Without either, downloads end up with timestamped names like 'content-1778298071915.docx' which is bad UX.\n\n4. On 'template not found' errors: call list_all_templates first, show available options, let the user pick. Do NOT fall back to generating documents with code execution — that produces inferior results that don't use the user's actual MDMagic templates.\n\n5. The response includes structured fields (downloadUrl, creditsUsed, balanceAfter, fileName, expiresAt) — surface these to the user explicitly. Don't paraphrase. The user wants to know exactly what they spent and what's left.\n\n6. Page sizes: A3, A4, Executive, US_Legal, US_Letter. Default A4. Orientation: Portrait or Landscape, default Portrait.",
+      description: "Convert markdown to a professionally formatted document using an MDMagic template.\n\nIMPORTANT GUIDANCE:\n\n1. Output format → what user gets:\n   - 'docx' → a single Word .docx file\n   - 'pdf' → a single .pdf file\n   - 'html' → a single .html file\n   - 'all' → a ZIP containing all three (DOCX + PDF + HTML)\n\n2. If the user is ambiguous (e.g. 'convert this'), ASK which format they want before calling. Don't assume.\n\n3. Filename: if the user attached a file (e.g. 'mydoc.md'), pass its base name as fileName. Otherwise the API derives one from the markdown's first H1. Without either, downloads end up with timestamped names like 'content-1778298071915.docx' which is bad UX.\n\n4. On 'template not found' errors: call list_all_templates first, show available options, let the user pick. Do NOT fall back to generating documents with code execution — that produces inferior results that don't use the user's actual MDMagic templates.\n\n5. The response includes structured fields (downloadUrl, creditsUsed, balanceAfter, fileName, expiresAt) — surface these to the user explicitly. Don't paraphrase. The user wants to know exactly what they spent and what's left.\n\n6. Page sizes: A3, A4, Executive, US_Legal, US_Letter. Default A4. Orientation: Portrait or Landscape, default Portrait.\n\n7. CRITICAL — newlines in `content`: markdown is line-sensitive. Headings (#, ##), tables (| ... |), lists (-, 1.), and code fences (```) ONLY work when each starts on its own line. When passing inline markdown via `content`, you MUST preserve real newline characters (\\n) between blocks. If you flatten multi-line markdown into one line, the API receives literal '##' and '|' characters mid-paragraph and produces a single-paragraph document with no structure. Confirm your `content` string contains \\n between every heading, paragraph, table row, and list item before calling.",
       annotations: {
         title: "Convert markdown to a professional document",
         readOnlyHint: false,
@@ -50,7 +50,7 @@ function getToolDefinitions() {
         properties: {
           content: {
             type: "string",
-            description: "Raw markdown text content (alternative to filePath or fileContent)"
+            description: "Raw markdown text content (alternative to filePath or fileContent). MUST preserve real newlines (\\n) between every block: heading, paragraph, table row, list item, code fence. Markdown is line-sensitive — a single-line blob with embedded '##' or '|' renders as literal text, not as a heading or table. If your source markdown has 30 lines, the string you pass here also has 30 lines separated by \\n."
           },
           filePath: {
             type: "string",
@@ -404,7 +404,7 @@ function createServer(): Server {
   return new Server(
     {
       name: 'mdmagic-mcp-server',
-      version: '1.7.6'
+      version: '1.7.7'
     },
     {
       capabilities: {
@@ -520,7 +520,7 @@ async function startHttp() {
             result: {
               protocolVersion: msg.params?.protocolVersion || '2024-11-05',
               capabilities: { tools: {} },
-              serverInfo: { name: 'mdmagic-mcp-server', version: '1.7.6', title: 'MDMagic — Markdown to professional documents' }
+              serverInfo: { name: 'mdmagic-mcp-server', version: '1.7.7', title: 'MDMagic — Markdown to professional documents' }
             }
           };
         case 'notifications/initialized':
