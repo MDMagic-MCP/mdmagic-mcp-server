@@ -26,11 +26,13 @@ export class AuthManager {
 4. Restart your MCP client`, 'MISSING_API_KEY');
     }
 
-    // Use exact same validation as backend
+    // Soft format check: warn but DO NOT throw. The backend validates the
+    // key on every API call anyway, so a real mismatch produces a clean
+    // 401 from the server. Hard-failing here breaks safety-scanner flows
+    // (Glama, Smithery, MCP registry tooling) that pass placeholder keys
+    // to enumerate `tools/list` without ever calling `tools/call`.
     if (!this.config.apiKey.match(/^mdmagic-\d{16}$/)) {
-      throw new MCPError(`❌ Invalid API key format. Expected: mdmagic-xxxxxxxxxxxxxxxx (exactly 16 digits)
-
-💡 Check your API key format from your MDMagic dashboard`, 'INVALID_API_KEY_FORMAT');
+      console.error(`⚠️  API key doesn't match expected format mdmagic-xxxxxxxxxxxxxxxx (16 digits). Server will start so directory scanners can enumerate tools, but tool calls will fail until a valid key is set.`);
     }
   }
 
