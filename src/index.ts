@@ -85,20 +85,6 @@ function getToolDefinitions() {
           }
         },
         required: ["templateName", "outputFormat"]
-      },
-      outputSchema: {
-        type: "object" as const,
-        description: "Conversion result with secure download link and credit accounting",
-        properties: {
-          success: { type: "boolean", description: "Whether the conversion succeeded" },
-          downloadUrl: { type: "string", description: "Secure expiring download URL (valid for 60 minutes)" },
-          fileName: { type: "string", description: "Filename of the downloadable document" },
-          creditsUsed: { type: "number", description: "Credits debited for this conversion" },
-          balanceAfter: { type: "number", description: "Remaining credit balance after this conversion" },
-          expiresAt: { type: "string", format: "date-time", description: "ISO 8601 timestamp when the download URL expires" },
-          message: { type: "string", description: "Human-readable status message" }
-        },
-        required: ["success", "downloadUrl", "fileName"]
       }
     },
     {
@@ -124,15 +110,6 @@ function getToolDefinitions() {
             description: "Optional filter — return only built-in templates in this category. Custom templates are always included regardless. Categories: Business (executive/financial), Creative (designer/artistic/novelty), Professional (legal), Technical (code/data documentation)."
           }
         }
-      },
-      outputSchema: {
-        type: "object" as const,
-        properties: {
-          builtinCount: { type: "integer", description: "Number of built-in templates returned" },
-          customCount: { type: "integer", description: "Number of custom templates returned" },
-          templates: { type: "array", items: TEMPLATE_OBJECT_SCHEMA, description: "All matching templates" }
-        },
-        required: ["templates"]
       }
     },
     {
@@ -158,14 +135,6 @@ function getToolDefinitions() {
             description: "Optional filter — return only templates in this category."
           }
         }
-      },
-      outputSchema: {
-        type: "object" as const,
-        properties: {
-          count: { type: "integer", description: "Number of templates returned" },
-          templates: { type: "array", items: TEMPLATE_OBJECT_SCHEMA, description: "Matching built-in templates" }
-        },
-        required: ["templates"]
       }
     },
     {
@@ -186,14 +155,6 @@ function getToolDefinitions() {
             description: "Include template details like available page sizes and orientations (default: false)"
           }
         }
-      },
-      outputSchema: {
-        type: "object" as const,
-        properties: {
-          count: { type: "integer", description: "Number of custom templates returned" },
-          templates: { type: "array", items: TEMPLATE_OBJECT_SCHEMA, description: "User's custom templates" }
-        },
-        required: ["templates"]
       }
     },
     {
@@ -209,14 +170,6 @@ function getToolDefinitions() {
       inputSchema: {
         type: "object" as const,
         properties: {}
-      },
-      outputSchema: {
-        type: "object" as const,
-        properties: {
-          default_page_size: { type: "string", description: "User's preferred page size" },
-          default_orientation: { type: "string", description: "User's preferred page orientation" }
-        },
-        required: ["default_page_size", "default_orientation"]
       }
     },
     {
@@ -233,15 +186,6 @@ function getToolDefinitions() {
         type: "object" as const,
         properties: {},
         additionalProperties: false
-      },
-      outputSchema: {
-        type: "object" as const,
-        properties: {
-          total_credits: { type: "integer", description: "Total credits available (subscription + purchased)" },
-          subscription_credits: { type: "integer", description: "Renewable monthly subscription credits" },
-          purchased_credits: { type: "integer", description: "Permanent purchased credits" }
-        },
-        required: ["total_credits"]
       }
     },
     {
@@ -282,16 +226,6 @@ function getToolDefinitions() {
           }
         },
         required: ["content", "templateName", "outputFormat"]
-      },
-      outputSchema: {
-        type: "object" as const,
-        properties: {
-          wordCount: { type: "integer", description: "Word count of the markdown content" },
-          pageCount: { type: "integer", description: "Estimated page count (300 words/page)" },
-          totalCredits: { type: "integer", description: "Total credits required for this conversion" },
-          breakdown: { type: "string", description: "Human-readable breakdown of how credits are calculated" }
-        },
-        required: ["totalCredits"]
       }
     },
     {
@@ -317,18 +251,6 @@ function getToolDefinitions() {
           }
         },
         required: ["content"]
-      },
-      outputSchema: {
-        type: "object" as const,
-        properties: {
-          filename: { type: "string", description: "Filename label echoed back" },
-          status: { type: "string", enum: ["green", "amber", "red"], description: "Validation verdict" },
-          message: { type: "string", description: "Human-readable explanation of any issues" },
-          inputFormat: { type: ["string", "null"], description: "Detected markdown flavour (e.g. gfm, commonmark)" },
-          additionalPandocFlags: { type: "array", items: { type: "string" }, description: "Pandoc flags that will be applied" },
-          detectedFeatures: { type: "object", description: "Map of markdown features found in the content" }
-        },
-        required: ["status", "message"]
       }
     },
     {
@@ -350,15 +272,6 @@ function getToolDefinitions() {
           }
         },
         required: ["templateName"]
-      },
-      outputSchema: {
-        type: "object" as const,
-        properties: {
-          template: TEMPLATE_OBJECT_SCHEMA,
-          pageSizes: { type: "array", items: { type: "string" }, description: "Supported page sizes" },
-          orientations: { type: "array", items: { type: "string" }, description: "Supported orientations" }
-        },
-        required: ["template", "pageSizes", "orientations"]
       }
     },
     {
@@ -386,15 +299,6 @@ function getToolDefinitions() {
           }
         },
         required: ["purpose"]
-      },
-      outputSchema: {
-        type: "object" as const,
-        properties: {
-          purpose: { type: "string", description: "Echoes back the purpose that was matched" },
-          rationale: { type: "string", description: "Why these templates were picked" },
-          recommendations: { type: "array", items: { type: "string" }, description: "Ranked list of template IDs to pass to convert_document" }
-        },
-        required: ["recommendations"]
       }
     }
   ];
@@ -404,7 +308,7 @@ function createServer(): Server {
   return new Server(
     {
       name: 'mdmagic-mcp-server',
-      version: '1.7.14'
+      version: '1.7.15'
     },
     {
       capabilities: {
@@ -520,7 +424,7 @@ async function startHttp() {
             result: {
               protocolVersion: msg.params?.protocolVersion || '2024-11-05',
               capabilities: { tools: {} },
-              serverInfo: { name: 'mdmagic-mcp-server', version: '1.7.14', title: 'MDMagic — Markdown to professional documents' }
+              serverInfo: { name: 'mdmagic-mcp-server', version: '1.7.15', title: 'MDMagic — Markdown to professional documents' }
             }
           };
         case 'notifications/initialized':

@@ -1,5 +1,6 @@
 // MDMagic API client service - SECURE DOWNLOAD URL IMPLEMENTATION
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import https from 'node:https';
 import FormData from 'form-data';
 import { AuthManager } from './authManager.js';
 import { handleApiError } from '../utils/errorHandler.js';
@@ -9,6 +10,13 @@ import {
   TemplatesApiResponse,
   ProcessedContent
 } from '../types/index.js';
+
+// v1.7.9 reliability: IPv4 + connection reuse. Some networks (home routers,
+// corporate egress, CGNAT) have flaky IPv6 paths that cause first-request
+// hangs to Cloudflare. family:4 pins resolution to IPv4. keepAlive reuses
+// warm TCP sockets across calls so we don't pay TLS handshake cost every
+// request. Restored in v1.7.15 after v1.7.14 inadvertently dropped it.
+const httpsAgent = new https.Agent({ family: 4, keepAlive: true });
 
 export interface SessionDefaults {
   defaultTemplate?: string;
@@ -28,7 +36,8 @@ export class MDMagicApiClient {
     this._client = axios.create({
       baseURL: this.authManager.getBaseUrl(),
       timeout: this.authManager.getTimeout(),
-      headers: this.authManager.getAuthHeaders()
+      headers: this.authManager.getAuthHeaders(),
+      httpsAgent
     });
 
     // Add request interceptor for logging
@@ -39,6 +48,32 @@ export class MDMagicApiClient {
       },
       (error) => Promise.reject(error)
     );
+
+    // v1.7.9 retry-on-transient: retry once on transient network failures.
+    // A single dropped packet, NAT timeout, or Cloudflare PoP hiccup
+    // shouldn't surface as a hard error to the end user. Restored in v1.7.15.
+    this._client.interceptors.response.use(undefined, async (error: any) => {
+      const config = error.config;
+      if (!config || (config as any)._retryAttempted) {
+        return Promise.reject(error);
+      }
+      const code = error.code;
+      const status = error.response?.status;
+      const isTransient =
+        code === 'ECONNABORTED' ||
+        code === 'ETIMEDOUT' ||
+        code === 'ECONNRESET' ||
+        code === 'ENETUNREACH' ||
+        code === 'EAI_AGAIN' ||
+        (typeof status === 'number' && status >= 500 && status <= 599);
+      if (!isTransient) {
+        return Promise.reject(error);
+      }
+      (config as any)._retryAttempted = true;
+      console.error(`[MDMagic API] Transient failure (${code || status}), retrying once after 2s...`);
+      await new Promise((r) => setTimeout(r, 2000));
+      return this._client.request(config);
+    });
   }
 
   // Expose the axios client for credit calculator
